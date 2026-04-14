@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Service Terminal</title>
+    <style>
+        :root {
+            --primary: #2d3436;
+            --accent: #0984e3; /* Schönes Blau */
+            --bg: #f5f6fa;
+            --card: #ffffff;
+            --text: #2d3436;
+            --success: #00b894;
+            --danger: #d63031;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        header {
+            padding: 40px 20px;
+            text-align: center;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+
+        h1 { margin: 0; font-weight: 300; letter-spacing: 1px; }
+        .subtitle { color: #636e72; margin-top: 5px; }
+
+        /* Das Grid für die Tische */
+        .grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 20px;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            aspect-ratio: 1/1;
+        }
+
+        /* Wenn ein Tisch ausgewählt ist */
+        .card.selected {
+            border-color: var(--accent);
+            background: #e1f5fe;
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px rgba(9, 132, 227, 0.1);
+        }
+
+        .card-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+        }
+
+        .card-label {
+            font-weight: bold;
+            font-size: 1.2rem;
+        }
+
+        /* Button Bereich */
+        footer {
+            padding: 30px;
+            background: white;
+            border-top: 1px solid #eee;
+        }
+
+        .btn-call {
+            width: 100%;
+            padding: 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.3rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-call:disabled {
+            background: #dfe6e9;
+            color: #b2bec3;
+            cursor: not-allowed;
+        }
+
+        /* Ruf-Modus Overlay */
+        #overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--accent);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 1000;
+        }
+
+        .pulse {
+            width: 150px;
+            height: 150px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 4rem;
+            animation: pulse-animation 2s infinite;
+        }
+
+        @keyframes pulse-animation {
+            0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); }
+            70% { transform: scale(1); box-shadow: 0 0 0 40px rgba(255, 255, 255, 0); }
+            100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); }
+        }
+
+        .btn-cancel {
+            margin-top: 50px;
+            background: white;
+            color: var(--danger);
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>SHIKGOO</h1>
+        <div class="subtitle">Bitte wählen Sie einen Tisch</div>
+    </header>
+
+    <main class="grid" id="tableGrid">
+        </main>
+
+    <footer>
+        <button id="callBtn" class="btn-call" disabled onclick="showCall()">
+            SERVICE RUFEN
+        </button>
+    </footer>
+
+    <div id="overlay">
+        <div class="pulse">🔔</div>
+        <h2 id="statusText">Tisch X ruft...</h2>
+        <p>Ein Mitarbeiter ist gleich bei Ihnen.</p>
+        <button class="btn-cancel" onclick="hideCall()">AUFLEGEN / BEENDEN</button>
+    </div>
+
+    <script>
+        const grid = document.getElementById('tableGrid');
+        const callBtn = document.getElementById('callBtn');
+        let selectedTable = null;
+
+        // Erstelle 10 Tische
+        for (let i = 1; i <= 10; i++) {
+            const card = document.createElement('div');
+            card.className = 'card';
+            card.innerHTML = `
+                <div class="card-icon">🍽️</div>
+                <div class="card-label">Tisch ${i}</div>
+            `;
+            card.onclick = () => select(i, card);
+            grid.appendChild(card);
+        }
+
+        function select(nr, element) {
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('selected'));
+            element.classList.add('selected');
+            selectedTable = nr;
+            callBtn.disabled = false;
+            callBtn.innerText = `TISCH ${nr} BESTÄTIGEN`;
+        }
+
+        function showCall() {
+            document.getElementById('statusText').innerText = `Tisch ${selectedTable} ruft den Service`;
+            document.getElementById('overlay').style.display = 'flex';
+        }
+
+        function hideCall() {
+            document.getElementById('overlay').style.display = 'none';
+        }
+    </script>
+</body>
+</html>
